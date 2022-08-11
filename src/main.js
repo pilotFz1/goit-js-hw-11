@@ -1,59 +1,92 @@
-import PixabayApiService from './js/api-service';
+/* import PixabayApiService from './js/api-service'; */
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { Notify } from 'notiflix';
-let downloadСounter = 1;
 
 let lightbox = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
   captionPosition: 'bottom',
   captionDelay: 250,
 });
+let caunt = 1;
+let clear = '';
 
 const refs = {
   searchForm: document.querySelector('.search-form'),
-  loadMoreBtn: document.querySelector('.load-more'),
+  submitBtn: document.querySelector('.submit'),
+  getBtn: document.querySelector('.get'),
   searchList: document.querySelector('.gallery'),
 };
 
-const loadBtnOn = () => refs.loadMoreBtn.classList.remove('invisible');
-const loadBtnOff = () => refs.loadMoreBtn.classList.add('invisible');
+const loadBtnOn = () => refs.getBtn.classList.remove('invisible');
+const loadBtnOff = () => refs.getBtn.classList.add('invisible');
+const BASE_URL = 'https://pixabay.com/api/';
+const API_KEY = '28934161-1d72d18718d0b61d346597ac7';
+const PARAMS = 'image_type=photo&orientation=horizontal&safesearch=true';
 
-const pixabayApiService = new PixabayApiService();
+/* const getPost = async () => {
+  const response = await fetch(
+    `${BASE_URL}?key=${API_KEY}&q=${refs.searchForm.searchQuery.value}&${PARAMS}&per_page=40&page=${caunt}`
+  );
+  const data = await response.json().then(renderMarkup);
+}; */
 
-refs.searchForm.addEventListener('submit', onSearch);
-refs.loadMoreBtn.addEventListener('click', onLoadMore);
+/* const post = test();
+console.log(post); */
 
-function onSearch(e) {
-  e.preventDefault();
+const getPost = e => {
+  clear = refs.searchForm.searchQuery.value;
+  loadBtnOff();
   reset();
-  downloadСounter = 1;
+  caunt = 1;
+  e.preventDefault();
+  fetch(
+    `${BASE_URL}?key=${API_KEY}&q=${refs.searchForm.searchQuery.value}&${PARAMS}&per_page=40&page=${caunt}`
+  )
+    .then(response => {
+      return response.json();
+    })
+    .then(data => {
+      refs.searchForm.searchQuery.value = '';
+      console.log(refs.searchForm.searchQuery.value);
+      if (data.totalHits === 0) {
+        loadBtnOff();
+        Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+      } else {
+        loadBtnOn();
+        Notify.success(`Hoooray! We found ${data.totalHits} images!`);
+      }
 
-  pixabayApiService.query = e.currentTarget.elements.searchQuery.value;
-  pixabayApiService.resetPage();
-  pixabayApiService
-    .fetchArticles()
+      caunt += 1;
+      console.log(data.totalHits);
+      console.log(data.hits);
+      return data.hits;
+    })
     .then(renderMarkup)
     .then(addSearch)
-    .catch(showErrors);
-}
+    .catch(error => console.log(error));
+};
 
-function onLoadMore() {
-  pixabayApiService
-    .fetchArticles()
+const getMore = e => {
+  fetch(
+    `${BASE_URL}?key=${API_KEY}&q=${clear}&${PARAMS}&per_page=40&page=${caunt}`
+  )
+    .then(response => response.json())
+    .then(data => {
+      caunt += 1;
+      return data.hits;
+    })
     .then(renderMarkup)
     .then(addSearch)
-    .catch(showErrors);
-}
+    .catch(error => console.log(error));
+};
+
+refs.submitBtn.addEventListener('click', getPost);
+refs.getBtn.addEventListener('click', getMore);
 
 const renderMarkup = array => {
-  console.log(array);
-  if (array.length !== 0 && downloadСounter === 1) {
-    showSuccess();
-    loadBtnOn();
-  }
-  downloadСounter += 1;
-
   return {
     markup: array
       .map(
@@ -88,29 +121,8 @@ const renderMarkup = array => {
 const addSearch = searchMarkup => {
   refs.searchList.insertAdjacentHTML('beforeend', searchMarkup.markup);
   lightbox.refresh();
-
-  const { height: cardHeight } = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect();
-
-  window.scrollBy({
-    top: cardHeight * 2,
-    behavior: 'smooth',
-  });
 };
 
 const reset = () => {
   refs.searchList.innerHTML = '';
-};
-
-const showErrors = error => {
-  Notify.failure(
-    'Sorry, there are no images matching your search query. Please try again.'
-  );
-
-  loadBtnOff();
-};
-
-const showSuccess = success => {
-  Notify.success(`Hoooray! We found 500 images!`);
 };

@@ -40,3 +40,12 @@ body {
 .invisible {
   display: none;
 }
+
+.get {
+  margin: 0 auto;
+  max-width: 150px;
+  background: tomato;
+  cursor: pointer;
+  border-radius: 25px;
+  padding: 10px 30px;
+}
