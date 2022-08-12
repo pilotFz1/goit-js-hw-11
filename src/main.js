@@ -28,11 +28,65 @@ const PARAMS = 'image_type=photo&orientation=horizontal&safesearch=true';
   const response = await fetch(
     `${BASE_URL}?key=${API_KEY}&q=${refs.searchForm.searchQuery.value}&${PARAMS}&per_page=40&page=${caunt}`
   );
-  const data = await response.json().then(renderMarkup);
-}; */
+  const data = await response.json();
+  refs.searchForm.searchQuery.value = '';
+  console.log(refs.searchForm.searchQuery.value);
+  if (data.totalHits === 0) {
+    loadBtnOff();
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  } else {
+    loadBtnOn();
+    Notify.success(`Hoooray! We found ${data.totalHits} images!`);
+  }
 
-/* const post = test();
-console.log(post); */
+  caunt += 1;
+  console.log(data);
+  console.log(data.hits);
+  renderMarkup(data.hits);
+  addSearch();
+};
+
+const post = getPost();
+console.log(post);
+
+const renderMarkup = post => {
+  return post
+    .map(
+      photo =>
+        `<div class="photo-card">
+          
+           <a class="gallery__item" href="${photo.largeImageURL}">
+            <img class="gallery__image" src="${photo.webformatURL}" alt="${photo.tags}" loading="lazy"  width="300" height="200" />
+            </a>
+             <div class="info">
+              <p class="info-item">
+                <b>Likes </br>${photo.likes}</b>
+              </p>
+              <p class="info-item">
+                <b>Views </br>${photo.views}</b>
+              </p>
+              <p class="info-item">
+                <b>Comments  </br>${photo.comments} </b>
+              </p>
+              <p class="info-item">
+                <b>Downloads  </br>${photo.downloads}</b>
+              </p>
+            </div>
+           
+          </div>
+          `
+    )
+    .join('');
+};
+
+console.log(renderMarkup);
+
+const addSearch = searchMarkup => {
+  refs.searchList.insertAdjacentHTML('beforeend', searchMarkup.markup);
+  lightbox.refresh();
+}; */
 
 const getPost = e => {
   clear = refs.searchForm.searchQuery.value;
