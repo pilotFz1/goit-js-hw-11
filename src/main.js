@@ -66,7 +66,6 @@ const getMore = async e => {
       `${BASE_URL}?key=${API_KEY}&q=${clear}&${PARAMS}&per_page=40&page=${caunt}`
     );
 
-    caunt += 1;
     renderMarkup(response.data.hits);
     refs.searchList.insertAdjacentHTML(
       'beforeend',
@@ -80,6 +79,15 @@ const getMore = async e => {
         "We're sorry, but you've reached the end of search results."
       );
     }
+
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
+
+    window.scrollBy({
+      top: cardHeight * 7,
+      behavior: 'smooth',
+    });
   } catch (error) {
     console.log(error);
   }
